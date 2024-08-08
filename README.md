@@ -1,6 +1,6 @@
 
 <h1 align="center">
-  University Professors List in Excel
+  Universities' Professors List in Excel
 </h1>
 
 <p align="center">

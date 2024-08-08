@@ -2,10 +2,12 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from selenium import webdriver
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as OpenpyxlImage
+from io import BytesIO
 
 # Step 1: Request the webpage
 url = "https://www.ou.edu/coe/cs/people/faculty"
-# page_to_scrape = requests.get(url)
 
 # Set up Selenium
 driver = webdriver.Chrome()  # or whichever browser you are using
@@ -18,31 +20,42 @@ driver.implicitly_wait(10)
 soup = BeautifulSoup(driver.page_source, "html.parser")
 
 # Step 3: Find and extract relevant data
-# This assumes the structure is similar to the example you provided. Adjust selectors as needed.
-
-# Step 3: Find and extract relevant data
 professors = []
-
-# Assuming each professor's card is within a 'div' with class 'card-profile'
 cards = soup.find_all("div", class_=["card-profile", "card card-profile adjunta p-5"])
-
-# If using only the more general class doesn't work, try both selectors.
-# cards = soup.select("div.card-profile, div.card.card-profile.adjunta.p-5")
 
 for card in cards:
     name = card.find("div", class_="card-title").get_text(strip=True) if card.find("div", class_="card-title") else "null"
-    image = card.find("img", class_="card-avatar")['src'] if card.find("img", class_="card-avatar") else "null"
+    image_url = card.find("img", class_="card-avatar")['src'] if card.find("img", class_="card-avatar") else "null"
     title = card.find("div", class_="card-description").find("p").get_text(strip=True) if card.find("div", class_="card-description") else "null"
     email = card.find("div", class_="card-description").find_all("p")[1].get_text(strip=True) if len(card.find("div", class_="card-description").find_all("p")) > 1 else "null"
     website = card.find("div", class_="card-description").find_all("p")[2].get_text(strip=True) if len(card.find("div", class_="card-description").find_all("p")) > 2 else "null"
     research_focus = ", ".join([li.get_text(strip=True) for li in card.find("ul").find_all("li")]) if card.find("ul") else "null"
 
-    professors.append([name, title, email, website, research_focus])
+    professors.append([name, image_url, title, email, website, research_focus])
 
-# Step 4: Create a DataFrame
-df = pd.DataFrame(professors, columns=["Name", "Title", "Email", "Website", "Research Focus"])
+# Step 4: Create an Excel Workbook
+wb = Workbook()
+ws = wb.active
+ws.title = "Professors"
 
-# Step 5: Save to Excel
-df.to_excel("professors2.xlsx", index=False)
+# Add the headers
+headers = ["Name", "Image", "Title", "Email", "Website", "Research Focus"]
+ws.append(headers)
 
-print("Data has been saved to professors.xlsx")
+# Step 5: Add data and images to the Excel file
+for idx, prof in enumerate(professors, start=2):
+    ws.append(prof[:1] + prof[2:])  # Add all data except image URL
+    image_url = prof[1]
+
+    # Download and insert the image
+    if image_url != "null":
+        image_url_full = f"https://www.ou.edu{image_url}"
+        image_response = requests.get(image_url_full)
+        img = OpenpyxlImage(BytesIO(image_response.content))
+        img.width, img.height = 100, 100  # Resize image to fit in cell
+        ws.add_image(img, f"B{idx}")
+
+# Step 6: Save the Excel file
+wb.save("professors_with_images.xlsx")
+
+print("Data has been saved to professors_with_images.xlsx")
