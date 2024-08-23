@@ -43,6 +43,6 @@ for card in cards:
 df = pd.DataFrame(professors, columns=["Name", "Title", "Email", "Website", "Research Focus"])
 
 # Step 5: Save to Excel
-df.to_excel("professors2.xlsx", index=False)
+df.to_excel("ou.xlsx", index=False)
 
-print("Data has been saved to professors.xlsx")
+print("Data has been saved to ou.xlsx")
