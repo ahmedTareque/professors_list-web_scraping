@@ -56,6 +56,6 @@ for idx, prof in enumerate(professors, start=2):
         ws.add_image(img, f"B{idx}")
 
 # Step 6: Save the Excel file
-wb.save("professors_with_images.xlsx")
+wb.save("ou_with_images.xlsx")
 
-print("Data has been saved to professors_with_images.xlsx")
+print("Data has been saved to ou_with_images.xlsx")
